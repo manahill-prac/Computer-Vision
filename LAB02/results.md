@@ -1,705 +1,687 @@
-# Task 02 --- Effect of Image Filtering on Skin-Lesion Classification
+# Experimental Results — Lab 02
+
+## Effect of Image Filtering on Skin-Lesion Classification
+
+---
 
 ## 1. Objective
 
-The objective of this experiment is to investigate how different
-spatial-domain image-processing filters affect the performance of
-pretrained deep-learning models for skin-lesion classification.
+The objective of this experiment is to investigate how different **spatial-domain image-processing filters** affect the performance of pretrained deep-learning models for skin-lesion classification.
 
-The experiment compares a baseline using original images with five
-filtering conditions:
+The experiment compares a baseline using the original images with five filtering conditions:
 
--   Average / Mean filter
--   Gaussian filter
--   Median filter
--   Sharpening filter
--   Sobel edge filter
+* **Average / Mean filter**
+* **Gaussian filter**
+* **Median filter**
+* **Sharpening filter**
+* **Sobel edge filter**
 
-All model/filter combinations use the same dataset split, preprocessing,
-training procedure, and evaluation procedure so that the effect of
-filtering can be compared fairly.
-
-------------------------------------------------------------------------
-
-## 2. Dataset
-
-### Dataset used in the notebook
-
-The notebook continues the same 5-class ISIC skin-lesion subset used in
-Lab Activity 1 rather than downloading the original HAM10000 release
-separately.
-
-**Important:** The lab task mentions HAM10000, while the executed
-notebook uses the instructor-approved/previously used ISIC subset. This
-distinction should be mentioned in the submission rather than presenting
-the dataset as the original HAM10000 dataset.
-
-### Selected classes
-
-1.  Actinic keratosis
-2.  Basal cell carcinoma
-3.  Melanoma
-4.  Nevus
-5.  Pigmented benign keratosis
-
-**Number of selected classes:** 5
-
-### Class distribution before the 90/10 split
-
-  Class                             Images
-  ---------------------------- -----------
-  Actinic keratosis                    114
-  Basal cell carcinoma                 376
-  Melanoma                             438
-  Nevus                                357
-  Pigmented benign keratosis           462
-  **Total**                      **1,747**
-
-A fixed stratified 90/10 train-validation split was created with
-`random_state=42` and reused for every filter condition. This gives
-approximately:
-
--   Training subset: 1,572 images
--   Validation subset: 175 images
-
-The separate `Test` directory was used for final evaluation.
-
-------------------------------------------------------------------------
-
-## 3. Best Three Pretrained Models
-
-The three models were selected from Lab Activity 1 according to the
-ranking recorded in the notebook:
-
-  Rank   Model         Lab 1 Accuracy
-  ------ ----------- ----------------
-  1      ResNet50              70.00%
-  2      VGG19                 65.00%
-  3      ResNet101             63.75%
-
-The notebook notes that ResNet101 was selected over VGG16, which also
-achieved 63.75% accuracy, because ResNet101 had the higher F1-score and
-AUC.
-
-Therefore, the three models used in Task 02 are:
-
--   **Best Model 1: ResNet50**
--   **Best Model 2: VGG19**
--   **Best Model 3: ResNet101**
-
-------------------------------------------------------------------------
-
-## 4. Experimental Setup
-
-### Image preprocessing
-
--   Image size: **224 × 224**
--   ImageNet normalization:
-    -   Mean = `[0.485, 0.456, 0.406]`
-    -   Standard deviation = `[0.229, 0.224, 0.225]`
--   Batch size: **32**
--   Random seed: **42**
--   Hardware during execution: **CUDA/GPU**
-
-### Training augmentation
-
-For training images, the same augmentation pipeline was retained across
-all experiments:
-
--   Random horizontal flip, probability 0.5
--   Random vertical flip, probability 0.5
--   Random affine transformation:
-    -   Translation = `(0.2, 0.2)`
-    -   Shear = `10°`
-    -   Scale = `(0.8, 1.2)`
-
-### Training strategy
-
-Each pretrained model used two-phase transfer learning:
-
-**Phase 1 --- Feature extraction**
-
--   Backbone frozen
--   Classification head trained
--   3 epochs
--   Adam optimizer
--   Learning rate = `1e-3`
-
-**Phase 2 --- Fine-tuning**
-
--   Entire network unfrozen
--   Up to 10 epochs
--   Adam optimizer
--   Learning rate = `1e-4`
--   ReduceLROnPlateau scheduler
--   Early stopping patience = 3
--   Best validation-loss model restored
-
-Loss function: **CrossEntropyLoss**
-
-### Filters
-
-  Filter       Implementation
-  ------------ --------------------------------------------------------------
-  No Filter    Original RGB image
-  Average      5 × 5 mean/box blur
-  Gaussian     5 × 5 Gaussian blur
-  Median       5 × 5 median filter
-  Sharpening   3 × 3 sharpening kernel
-  Sobel        Grayscale Sobel gradient magnitude, replicated to 3 channels
+All model/filter combinations use the same dataset split, preprocessing, training procedure, and evaluation procedure. This ensures that the observed differences can primarily be attributed to the applied image-filtering operation.
 
 A total of **18 experiments** were performed:
 
-**3 models × 6 conditions = 18 runs**
+> **3 pretrained models × 6 image conditions = 18 runs**
 
-------------------------------------------------------------------------
+---
 
-# 5. Experimental Results
+# 2. Dataset
 
-The following metrics were obtained from the executed notebook.
+## 2.1 Dataset Used in the Notebook
 
--   Accuracy
--   Weighted Precision
--   Weighted Recall
--   Weighted F1-score
--   Macro-F1
--   Balanced Accuracy
--   Macro one-vs-rest AUC
+The notebook continues the same **5-class ISIC skin-lesion subset used in Lab Activity 1** rather than downloading the original HAM10000 release separately.
 
-## 5.1 Complete comparison table
+> **Important:** The lab task mentions HAM10000, while the executed notebook uses the previously used 5-class ISIC subset. This distinction should be reported transparently rather than presenting the executed dataset as a separate original HAM10000 download.
 
-  ------------------------------------------------------------------------------------------------
-  Model       Filter         Accuracy   Precision   Recall       F1   Macro-F1   Balanced      AUC
-                                                                                 Accuracy 
-  ----------- ------------ ---------- ----------- -------- -------- ---------- ---------- --------
-  ResNet50    No Filter         70.00       73.30    70.00    68.50      68.50      70.00    90.72
+## 2.2 Selected Classes
 
-  ResNet50    Average           61.25       66.51    61.25    59.40      59.40      61.25    87.34
+The experiment uses the following five classes:
 
-  ResNet50    Gaussian          63.75       67.47    63.75    58.16      58.16      63.75    90.66
+1. Actinic keratosis
+2. Basal cell carcinoma
+3. Melanoma
+4. Nevus
+5. Pigmented benign keratosis
 
-  ResNet50    Median            61.25       75.79    61.25    56.75      56.75      61.25    91.13
+**Number of selected classes:** 5
 
-  ResNet50    Sharpening        57.50       48.83    57.50    50.89      50.89      57.50    89.45
+## 2.3 Class Distribution
 
-  ResNet50    Sobel             45.00       41.07    45.00    42.09      42.09      45.00    81.66
+| Class                      |    Images |
+| -------------------------- | --------: |
+| Actinic keratosis          |       114 |
+| Basal cell carcinoma       |       376 |
+| Melanoma                   |       438 |
+| Nevus                      |       357 |
+| Pigmented benign keratosis |       462 |
+| **Total**                  | **1,747** |
 
-  VGG19       No Filter         66.25       72.84    66.25    63.47      63.47      66.25    93.05
+A fixed **stratified 90/10 train-validation split** was created using `random_state=42` and reused for every filter condition.
 
-  VGG19       Average           62.50       62.00    62.50    56.94      56.94      62.50    92.38
+This resulted in approximately:
 
-  VGG19       Gaussian          62.50       65.42    62.50    57.18      57.18      62.50    92.36
+* **Training subset:** 1,572 images
+* **Validation subset:** 175 images
+* **Test subset:** Official `Test` directory, kept separate for final evaluation
 
-  VGG19       Median            66.25       69.16    66.25    62.13      62.13      66.25    90.90
+Keeping the same split across all experiments provides a consistent basis for comparing the effect of different filters.
 
-  VGG19       Sharpening        53.75       63.88    53.75    50.59      50.59      53.75    86.56
+---
 
-  VGG19       Sobel             52.50       62.88    52.50    49.98      49.98      52.50    84.41
+# 3. Three Best Pretrained Models
 
-  ResNet101   No Filter         63.75       70.40    63.75    60.54      60.54      63.75    90.04
+The three models used in Lab 02 were selected from the Lab Activity 1 results.
 
-  ResNet101   Average           58.75       64.03    58.75    56.67      56.67      58.75    87.77
+| Rank | Model         | Lab 1 Accuracy |
+| ---: | ------------- | -------------: |
+|    1 | **ResNet50**  |     **70.00%** |
+|    2 | **VGG19**     |     **65.00%** |
+|    3 | **ResNet101** |     **63.75%** |
 
-  ResNet101   Gaussian          52.50       72.34    52.50    45.27      45.27      52.50    86.09
+The notebook selected **ResNet101 instead of VGG16** as the third model because both achieved 63.75% accuracy, while ResNet101 had the higher F1-score and AUC in the Lab 1 comparison.
 
-  ResNet101   Median            60.00       67.39    60.00    55.06      55.06      60.00    90.20
+Therefore, the three models evaluated in Lab 02 were:
 
-  ResNet101   Sharpening        63.75       72.67    63.75    60.57      60.57      63.75    91.07
+* **ResNet50**
+* **VGG19**
+* **ResNet101**
 
-  ResNet101   Sobel             42.50       52.47    42.50    41.13      41.13      42.50    76.80
-  ------------------------------------------------------------------------------------------------
+---
 
-**All values are percentages.**
+# 4. Experimental Setup
 
-------------------------------------------------------------------------
+## 4.1 Image Preprocessing
 
-# 6. Change in Accuracy Relative to the Unfiltered Baseline
+| Setting       | Value                  |
+| ------------- | ---------------------- |
+| Image size    | **224 × 224**          |
+| Batch size    | **32**                 |
+| Random seed   | **42**                 |
+| Hardware      | **CUDA/GPU**           |
+| Normalization | ImageNet normalization |
 
-  Filter          ResNet50       VGG19   ResNet101
-  ------------ ----------- ----------- -----------
-  Average         -8.75 pp    -3.75 pp    -5.00 pp
-  Gaussian        -6.25 pp    -3.75 pp   -11.25 pp
-  Median          -8.75 pp     0.00 pp    -3.75 pp
-  Sharpening     -12.50 pp   -12.50 pp     0.00 pp
-  Sobel          -25.00 pp   -13.75 pp   -21.25 pp
+ImageNet normalization:
 
-`pp` = percentage points.
+```text
+Mean = [0.485, 0.456, 0.406]
+Std  = [0.229, 0.224, 0.225]
+```
 
-The largest accuracy change for all three models occurs with the **Sobel
-filter**:
+---
 
--   ResNet50: **−25.00 percentage points**
--   VGG19: **−13.75 percentage points**
--   ResNet101: **−21.25 percentage points**
+## 4.2 Training Augmentation
 
-------------------------------------------------------------------------
+The same training augmentation pipeline was retained for all experiments:
 
-# 7. Model-by-Model Analysis
+* Random horizontal flip with probability `0.5`
+* Random vertical flip with probability `0.5`
+* Random affine transformation:
 
-## 7.1 ResNet50
+  * Translation = `(0.2, 0.2)`
+  * Shear = `10°`
+  * Scale = `(0.8, 1.2)`
 
-Baseline accuracy was **70.00%**.
+Using the same augmentation pipeline across all experiments helps isolate the effect of the filtering operation.
 
-Filtering reduced accuracy under every tested condition:
+---
 
--   Average: 61.25% → −8.75 pp
--   Gaussian: 63.75% → −6.25 pp
--   Median: 61.25% → −8.75 pp
--   Sharpening: 57.50% → −12.50 pp
--   Sobel: 45.00% → −25.00 pp
+## 4.3 Training Strategy
 
-The Sobel filter caused the largest degradation. Macro-F1 decreased from
-**68.50%** to **42.09%**, while balanced accuracy decreased from
-**70.00%** to **45.00%**.
+Each pretrained model used a two-phase transfer-learning procedure.
 
-Interestingly, Median filtering produced a higher weighted precision of
-75.79%, but its overall accuracy, recall, F1, macro-F1, and balanced
-accuracy were lower than the unfiltered baseline. This shows why
-precision alone should not be used to judge the overall classification
-behavior.
+### Phase 1 — Classification-Head Training
 
-## 7.2 VGG19
+* Backbone frozen
+* Classification head trained
+* Epochs = **3**
+* Optimizer = **Adam**
+* Learning rate = `1e-3`
 
-Baseline accuracy was **66.25%**.
+### Phase 2 — Fine-Tuning
 
--   Average: 62.50% → −3.75 pp
--   Gaussian: 62.50% → −3.75 pp
--   Median: 66.25% → 0.00 pp
--   Sharpening: 53.75% → −12.50 pp
--   Sobel: 52.50% → −13.75 pp
+* Entire network unfrozen
+* Maximum epochs = **10**
+* Optimizer = **Adam**
+* Learning rate = `1e-4`
+* Scheduler = **ReduceLROnPlateau**
+* Early-stopping patience = **3**
+* Best validation-loss weights restored
 
-Median filtering produced the same accuracy and balanced accuracy as the
-baseline, although its F1-score and AUC were lower.
+### Loss Function
 
-Sobel again caused substantial degradation.
+**CrossEntropyLoss**
 
-## 7.3 ResNet101
+---
 
-Baseline accuracy was **63.75%**.
+# 5. Image Filters
 
--   Average: 58.75% → −5.00 pp
--   Gaussian: 52.50% → −11.25 pp
--   Median: 60.00% → −3.75 pp
--   Sharpening: 63.75% → 0.00 pp
--   Sobel: 42.50% → −21.25 pp
+The following six image conditions were evaluated for each pretrained model.
 
-ResNet101 was comparatively unchanged by sharpening in terms of
-accuracy: both the baseline and sharpening condition achieved
-**63.75%**. However, this did not mean that every metric was identical;
-the sharpening condition had slightly higher weighted precision, F1,
-macro-F1 and AUC.
+| Condition      | Implementation                                              |
+| -------------- | ----------------------------------------------------------- |
+| **No Filter**  | Original RGB image                                          |
+| **Average**    | 5 × 5 mean/box blur                                         |
+| **Gaussian**   | 5 × 5 Gaussian blur                                         |
+| **Median**     | 5 × 5 median filter                                         |
+| **Sharpening** | 3 × 3 sharpening kernel                                     |
+| **Sobel**      | Grayscale Sobel gradient magnitude replicated to 3 channels |
 
-------------------------------------------------------------------------
+Therefore:
 
-# 8. Answers to the Required Questions
+> **3 models × 6 conditions = 18 experimental runs**
+
+---
+
+# 6. Evaluation Metrics
+
+The executed notebook evaluated each experiment using:
+
+* **Accuracy**
+* **Weighted Precision**
+* **Weighted Recall**
+* **Weighted F1-score**
+* **Macro-F1**
+* **Balanced Accuracy**
+* **Macro one-vs-rest AUC**
+
+These metrics provide complementary information. Accuracy measures overall correct classification, while Macro-F1 and Balanced Accuracy provide additional information about performance across classes. AUC evaluates the model's class-ranking performance.
+
+---
+
+# 7. Experimental Results
+
+## 7.1 Complete Comparison of All 18 Experiments
+
+| Model         | Filter        | Accuracy (%) | Precision (%) | Recall (%) | F1-Score (%) | Macro-F1 (%) | Balanced Accuracy (%) |   AUC (%) |
+| ------------- | ------------- | -----------: | ------------: | ---------: | -----------: | -----------: | --------------------: | --------: |
+| **ResNet50**  | **No Filter** |    **70.00** |         73.30 |  **70.00** |    **68.50** |    **68.50** |             **70.00** |     90.72 |
+| ResNet50      | Average       |        61.25 |         66.51 |      61.25 |        59.40 |        59.40 |                 61.25 |     87.34 |
+| ResNet50      | Gaussian      |        63.75 |         67.47 |      63.75 |        58.16 |        58.16 |                 63.75 |     90.66 |
+| ResNet50      | Median        |        61.25 |     **75.79** |      61.25 |        56.75 |        56.75 |                 61.25 | **91.13** |
+| ResNet50      | Sharpening    |        57.50 |         48.83 |      57.50 |        50.89 |        50.89 |                 57.50 |     89.45 |
+| ResNet50      | Sobel         |        45.00 |         41.07 |      45.00 |        42.09 |        42.09 |                 45.00 |     81.66 |
+| **VGG19**     | **No Filter** |    **66.25** |         72.84 |  **66.25** |    **63.47** |    **63.47** |             **66.25** | **93.05** |
+| VGG19         | Average       |        62.50 |         62.00 |      62.50 |        56.94 |        56.94 |                 62.50 |     92.38 |
+| VGG19         | Gaussian      |        62.50 |         65.42 |      62.50 |        57.18 |        57.18 |                 62.50 |     92.36 |
+| VGG19         | Median        |        66.25 |         69.16 |      66.25 |        62.13 |        62.13 |                 66.25 |     90.90 |
+| VGG19         | Sharpening    |        53.75 |         63.88 |      53.75 |        50.59 |        50.59 |                 53.75 |     86.56 |
+| VGG19         | Sobel         |        52.50 |         62.88 |      52.50 |        49.98 |        49.98 |                 52.50 |     84.41 |
+| **ResNet101** | **No Filter** |    **63.75** |         70.40 |  **63.75** |        60.54 |        60.54 |             **63.75** |     90.04 |
+| ResNet101     | Average       |        58.75 |         64.03 |      58.75 |        56.67 |        56.67 |                 58.75 |     87.77 |
+| ResNet101     | Gaussian      |        52.50 |     **72.34** |      52.50 |        45.27 |        45.27 |                 52.50 |     86.09 |
+| ResNet101     | Median        |        60.00 |         67.39 |      60.00 |        55.06 |        55.06 |                 60.00 |     90.20 |
+| ResNet101     | Sharpening    |        63.75 |     **72.67** |      63.75 |    **60.57** |    **60.57** |                 63.75 | **91.07** |
+| ResNet101     | Sobel         |        42.50 |         52.47 |      42.50 |        41.13 |        41.13 |                 42.50 |     76.80 |
+
+> **All values are percentages.**
+
+### Main observations
+
+* ResNet50 achieved the highest overall accuracy: **70.00%**.
+* VGG19 achieved the highest AUC: **93.05%**.
+* ResNet50 + Median achieved the highest weighted Precision: **75.79%**.
+* ResNet50 + No Filter achieved the highest weighted Recall: **70.00%**.
+* ResNet50 + No Filter achieved the highest F1-Score and Macro-F1: **68.50%**.
+* Sobel produced the lowest accuracy for all three architectures.
+
+---
+
+# 8. Change in Accuracy Relative to the Unfiltered Baseline
+
+The following table reports the change in accuracy relative to each model's own **No Filter** baseline.
+
+| Filter     |      ResNet50 |       VGG19 |   ResNet101 |
+| ---------- | ------------: | ----------: | ----------: |
+| Average    |      −8.75 pp |    −3.75 pp |    −5.00 pp |
+| Gaussian   |      −6.25 pp |    −3.75 pp |   −11.25 pp |
+| Median     |      −8.75 pp | **0.00 pp** |    −3.75 pp |
+| Sharpening |     −12.50 pp |   −12.50 pp | **0.00 pp** |
+| Sobel      | **−25.00 pp** |   −13.75 pp |   −21.25 pp |
+
+> **pp = percentage points**
+
+The largest accuracy change occurred with the **Sobel filter** for every model:
+
+| Model     | No Filter |  Sobel |        Change |
+| --------- | --------: | -----: | ------------: |
+| ResNet50  |    70.00% | 45.00% | **−25.00 pp** |
+| VGG19     |    66.25% | 52.50% | **−13.75 pp** |
+| ResNet101 |    63.75% | 42.50% | **−21.25 pp** |
+
+---
+
+# 9. Model-by-Model Analysis
+
+## 9.1 ResNet50
+
+The unfiltered ResNet50 model achieved a baseline accuracy of **70.00%**.
+
+| Condition  |   Accuracy |        Change |
+| ---------- | ---------: | ------------: |
+| No Filter  | **70.00%** |             — |
+| Average    |     61.25% |      −8.75 pp |
+| Gaussian   |     63.75% |      −6.25 pp |
+| Median     |     61.25% |      −8.75 pp |
+| Sharpening |     57.50% |     −12.50 pp |
+| Sobel      |     45.00% | **−25.00 pp** |
+
+Every tested filter reduced ResNet50 accuracy.
+
+The largest degradation occurred with Sobel filtering. Macro-F1 decreased from **68.50%** to **42.09%**, while Balanced Accuracy decreased from **70.00%** to **45.00%**.
+
+An important observation is that Median filtering produced the highest weighted Precision for ResNet50 at **75.79%**, despite lower Accuracy, Recall, F1-Score, Macro-F1, and Balanced Accuracy than the unfiltered model.
+
+This demonstrates that Precision alone does not provide a complete picture of overall classification performance.
+
+---
+
+## 9.2 VGG19
+
+The unfiltered VGG19 model achieved a baseline accuracy of **66.25%**.
+
+| Condition  |   Accuracy |      Change |
+| ---------- | ---------: | ----------: |
+| No Filter  | **66.25%** |           — |
+| Average    |     62.50% |    −3.75 pp |
+| Gaussian   |     62.50% |    −3.75 pp |
+| Median     | **66.25%** | **0.00 pp** |
+| Sharpening |     53.75% |   −12.50 pp |
+| Sobel      |     52.50% |   −13.75 pp |
+
+Median filtering preserved the baseline accuracy of **66.25%** and the same Balanced Accuracy.
+
+However, its F1-Score and AUC were lower than those of the unfiltered condition.
+
+Sobel filtering produced the largest reduction for VGG19, lowering accuracy by **13.75 percentage points**.
+
+---
+
+## 9.3 ResNet101
+
+The unfiltered ResNet101 model achieved a baseline accuracy of **63.75%**.
+
+| Condition  |   Accuracy |        Change |
+| ---------- | ---------: | ------------: |
+| No Filter  | **63.75%** |             — |
+| Average    |     58.75% |      −5.00 pp |
+| Gaussian   |     52.50% |     −11.25 pp |
+| Median     |     60.00% |      −3.75 pp |
+| Sharpening | **63.75%** |   **0.00 pp** |
+| Sobel      |     42.50% | **−21.25 pp** |
+
+Sharpening preserved the same accuracy as the unfiltered baseline.
+
+However, other metrics were slightly different. Sharpening increased weighted Precision from **70.40% to 72.67%**, F1-Score from **60.54% to 60.57%**, Macro-F1 from **60.54% to 60.57%**, and AUC from **90.04% to 91.07%**.
+
+Sobel filtering caused the largest degradation, reducing accuracy to **42.50%**.
+
+---
+
+# 10. Answers to the Required Questions
 
 ## Q1. Which three pretrained models performed best in Lab Activity 1?
 
 The three models selected from Lab Activity 1 were:
 
-1.  **ResNet50 --- 70.00%**
-2.  **VGG19 --- 65.00%**
-3.  **ResNet101 --- 63.75%**
+| Rank | Model         | Lab 1 Accuracy |
+| ---: | ------------- | -------------: |
+|    1 | **ResNet50**  |     **70.00%** |
+|    2 | **VGG19**     |     **65.00%** |
+|    3 | **ResNet101** |     **63.75%** |
 
-ResNet101 was selected over VGG16 because both had 63.75% accuracy,
-while ResNet101 had the higher F1-score and AUC according to the Lab 1
-comparison recorded in the notebook.
+ResNet101 was selected over VGG16 because both achieved **63.75% accuracy**, while ResNet101 had the higher F1-score and AUC in the Lab 1 comparison.
 
-------------------------------------------------------------------------
+Therefore, the three models evaluated in Lab 02 were **ResNet50, VGG19, and ResNet101**.
+
+---
 
 ## Q2. How does filtering affect each of the three models?
 
-Filtering generally reduced classification performance compared with the
-original-image baseline.
+Filtering generally reduced classification performance compared with the original-image baseline.
 
 ### ResNet50
 
-All five filters reduced accuracy. The reduction ranged from **−6.25 pp
-with Gaussian filtering** to **−25.00 pp with Sobel filtering**.
+All five filters reduced accuracy. The reduction ranged from:
+
+* **Gaussian:** −6.25 pp
+* **Sobel:** −25.00 pp
 
 ### VGG19
 
-Median filtering preserved the baseline accuracy at **66.25%**. Average
-and Gaussian filtering caused smaller reductions, while sharpening and
-Sobel caused larger reductions.
+Median filtering preserved the baseline accuracy at **66.25%**. Average and Gaussian filtering produced smaller reductions, while Sharpening and Sobel produced larger reductions.
 
 ### ResNet101
 
-Sharpening preserved the baseline accuracy at **63.75%**. Average,
-Gaussian, and Median filtering reduced accuracy, with Gaussian producing
-a larger decrease. Sobel produced the largest reduction.
+Sharpening preserved the baseline accuracy at **63.75%**. Average, Gaussian, and Median filtering reduced accuracy, while Sobel produced the largest reduction.
 
-Therefore, the models did not respond identically to every filter,
-although the overall trend was that filtering was usually detrimental.
+Therefore, the models did not respond identically to every filter, although the overall trend was that filtering was usually detrimental under this experimental setup.
 
-------------------------------------------------------------------------
+---
 
 ## Q3. Which filter produces the greatest change compared with the unfiltered baseline?
 
-The **Sobel edge filter** produced the greatest accuracy change for all
-three models.
+The **Sobel edge filter** produced the greatest accuracy change for all three models.
 
--   ResNet50: −25.00 pp
--   VGG19: −13.75 pp
--   ResNet101: −21.25 pp
+| Model     | Accuracy Change with Sobel |
+| --------- | -------------------------: |
+| ResNet50  |              **−25.00 pp** |
+| VGG19     |              **−13.75 pp** |
+| ResNet101 |              **−21.25 pp** |
 
 It also produced the lowest accuracy for each model:
 
--   ResNet50: 45.00%
--   VGG19: 52.50%
--   ResNet101: 42.50%
+| Model     | Sobel Accuracy |
+| --------- | -------------: |
+| ResNet50  |     **45.00%** |
+| VGG19     |     **52.50%** |
+| ResNet101 |     **42.50%** |
 
-------------------------------------------------------------------------
+---
 
 ## Q4. Does the effect of a filter remain consistent across all three models?
 
 No.
 
-The direction of the effect is broadly similar because most filters
-reduce performance, but the magnitude differs across models.
+The general direction was similar for many filters, but the **magnitude of the effect differed between architectures**.
 
-For example:
+For example, Median filtering produced:
 
--   Median filtering reduced ResNet50 accuracy by 8.75 pp.
--   Median filtering had **0.00 pp** change for VGG19.
--   Median filtering reduced ResNet101 accuracy by 3.75 pp.
+| Model     | Accuracy Change |
+| --------- | --------------: |
+| ResNet50  |        −8.75 pp |
+| VGG19     |     **0.00 pp** |
+| ResNet101 |        −3.75 pp |
 
-Similarly, sharpening reduced ResNet50 and VGG19 accuracy by 12.50 pp
-but produced no accuracy change for ResNet101.
+Similarly, Sharpening produced:
+
+| Model     | Accuracy Change |
+| --------- | --------------: |
+| ResNet50  |       −12.50 pp |
+| VGG19     |       −12.50 pp |
+| ResNet101 |     **0.00 pp** |
 
 Therefore, filter sensitivity is **model-dependent**.
 
-------------------------------------------------------------------------
+---
 
-## Q5. Does filtering improve or decrease macro-F1 and balanced accuracy?
+## Q5. Does filtering improve or decrease Macro-F1 and Balanced Accuracy?
 
-In this experiment, filtering generally **decreased both Macro-F1 and
-balanced accuracy** compared with the unfiltered baseline.
+In this experiment, filtering generally **decreased both Macro-F1 and Balanced Accuracy** compared with the unfiltered baseline.
 
-### ResNet50
+### Baseline vs. Sobel
 
-Baseline:
+| Model     | Baseline Macro-F1 | Sobel Macro-F1 | Baseline Balanced Accuracy | Sobel Balanced Accuracy |
+| --------- | ----------------: | -------------: | -------------------------: | ----------------------: |
+| ResNet50  |            68.50% |         42.09% |                     70.00% |                  45.00% |
+| VGG19     |            63.47% |         49.98% |                     66.25% |                  52.50% |
+| ResNet101 |            60.54% |         41.13% |                     63.75% |                  42.50% |
 
--   Macro-F1 = 68.50%
--   Balanced Accuracy = 70.00%
+There were some preservation cases:
 
-Sobel:
+* **VGG19 + Median:** Balanced Accuracy remained at 66.25%.
+* **ResNet101 + Sharpening:** Balanced Accuracy remained at 63.75%.
 
--   Macro-F1 = 42.09%
--   Balanced Accuracy = 45.00%
+However, these conditions did not demonstrate a general improvement over the corresponding unfiltered baselines.
 
-### VGG19
-
-Baseline:
-
--   Macro-F1 = 63.47%
--   Balanced Accuracy = 66.25%
-
-Sobel:
-
--   Macro-F1 = 49.98%
--   Balanced Accuracy = 52.50%
-
-### ResNet101
-
-Baseline:
-
--   Macro-F1 = 60.54%
--   Balanced Accuracy = 63.75%
-
-Sobel:
-
--   Macro-F1 = 41.13%
--   Balanced Accuracy = 42.50%
-
-The only notable preservation cases were Median filtering for VGG19 and
-Sharpening for ResNet101 in terms of accuracy/balanced accuracy. They
-did not produce a general improvement over the baseline.
-
-------------------------------------------------------------------------
+---
 
 ## Q6. Which lesion classes are most affected by filtering?
 
-The per-class classification analysis shows that filtering particularly
-affects classes whose recognition depends on information that can be
-weakened or distorted by smoothing or edge conversion.
+The per-class results show that filtering can affect individual lesion classes differently.
 
-The strongest degradation is visible in the edge-filtered conditions,
-especially for **melanoma** and **actinic keratosis** in the reported
-per-class results. For example, in the ResNet101 + Sobel condition:
+A particularly strong example is **ResNet101 + Sobel**:
 
-  Class                          Precision   Recall       F1
-  ---------------------------- ----------- -------- --------
-  Actinic keratosis                 66.67%   12.50%   21.05%
-  Basal cell carcinoma              90.91%   62.50%   74.07%
-  Melanoma                          37.50%   18.75%   25.00%
-  Nevus                             40.00%   62.50%   48.78%
-  Pigmented benign keratosis        27.27%   56.25%   36.73%
+| Class                      |  Precision |     Recall |   F1-Score |
+| -------------------------- | ---------: | ---------: | ---------: |
+| Actinic keratosis          |     66.67% | **12.50%** | **21.05%** |
+| Basal cell carcinoma       | **90.91%** |     62.50% | **74.07%** |
+| Melanoma                   |     37.50% | **18.75%** | **25.00%** |
+| Nevus                      |     40.00% |     62.50% |     48.78% |
+| Pigmented benign keratosis |     27.27% |     56.25% |     36.73% |
 
-This indicates that Sobel-based conversion can cause substantial
-class-specific loss of recall and F1, particularly for actinic keratosis
-and melanoma in this run.
+In this particular run, **actinic keratosis** and **melanoma** showed especially low recall and F1-Score.
 
-The effect should not be interpreted as a universal property of these
-diseases; it is a result observed on this experiment's selected dataset
-and trained models.
+These observations describe this specific dataset/model/filter experiment and should not be interpreted as universal properties of these medical classes.
 
-------------------------------------------------------------------------
+---
 
 ## Q7. Why might smoothing remove useful lesion texture or morphological information?
 
-Average, Gaussian, and Median filters reduce high-frequency image
-information to varying degrees.
+Average, Gaussian, and Median filters reduce local image variations to varying degrees.
 
 Skin-lesion classification can depend on visual characteristics such as:
 
--   Fine texture
--   Small pigment structures
--   Lesion borders
--   Irregular shapes
--   Local color transitions
--   Small morphological details
+* Fine texture
+* Pigmentation patterns
+* Lesion boundaries
+* Irregular shapes
+* Local color transitions
+* Small morphological structures
 
-Smoothing can suppress some of these details together with noise. If the
-removed information is discriminative for a particular lesion class, the
-CNN receives a less informative representation and classification
-performance can decrease.
+Smoothing can suppress some of these details together with unwanted noise.
 
-This experiment supports that interpretation because the smoothing
-filters generally reduced Macro-F1 and balanced accuracy relative to the
-unfiltered baseline.
+If the removed information is useful for distinguishing lesion classes, the CNN receives a less informative representation, which can reduce classification performance.
 
-------------------------------------------------------------------------
+The experimental results support this interpretation because the smoothing filters generally reduced Macro-F1 and Balanced Accuracy relative to the unfiltered baseline.
+
+---
 
 ## Q8. Why might sharpening or edge detection help or hurt classification?
 
 ### Sharpening
 
-Sharpening increases local contrast and emphasizes edges. This can help
-if lesion boundaries or fine structures are useful classification
-features.
+Sharpening increases local contrast and emphasizes boundaries.
 
-However, excessive sharpening can also:
+It may help when:
 
--   Amplify image noise
--   Create artificial high-frequency patterns
--   Distort natural texture
--   Make the image distribution different from what the pretrained model
-    originally learned
+* Lesion boundaries contain useful information.
+* Fine structures are important.
+* The original image contains mild blur.
 
-The results demonstrate both possibilities. Sharpening reduced ResNet50
-and VGG19 accuracy but left ResNet101 accuracy unchanged at 63.75%.
+However, sharpening can also:
 
-### Sobel edge detection
+* Amplify noise
+* Create artificial high-frequency patterns
+* Distort natural texture
+* Change the image distribution presented to the pretrained network
 
-Sobel filtering explicitly converts the image into an edge-magnitude
-representation. This removes much of the original color and texture
-information.
+The experimental results demonstrate this model-dependent behavior. Sharpening reduced ResNet50 and VGG19 accuracy but preserved ResNet101 accuracy at **63.75%**.
 
-This can hurt classification when the pretrained CNN depends on:
+### Sobel Edge Detection
 
--   Color
--   Pigmentation
--   Texture
--   Region appearance
--   Rich RGB information
+Sobel filtering emphasizes image gradients and produces an edge-oriented representation.
 
-The strong decrease in performance for all three models, particularly
-the large accuracy drops for ResNet50 and ResNet101, is consistent with
-this explanation.
+In this experiment, the image was converted to grayscale before computing the Sobel gradient magnitude, and the resulting representation was replicated to three channels.
 
-------------------------------------------------------------------------
+This transformation removes much of the original RGB color and texture information.
+
+That can be harmful when the CNN relies on:
+
+* Color
+* Pigmentation
+* Texture
+* Region appearance
+* Rich RGB information
+
+The substantial accuracy reductions observed for all three models are consistent with this explanation.
+
+---
 
 ## Q9. What is the difference between convolution and correlation?
 
-Both convolution and correlation involve sliding a kernel across an
-image and computing a local weighted sum.
+Both convolution and correlation involve sliding a kernel across an image and calculating local weighted sums.
 
 The key difference is **kernel flipping**.
 
 ### Correlation
 
-The kernel is applied directly without flipping:
+The kernel is applied without flipping:
 
-\[ g(x,y)=`\sum`{=tex}\_m`\sum`{=tex}\_n f(x+m,y+n)h(m,n) \]
+$$
+g(x,y)=\sum_m\sum_n f(x+m,y+n)h(m,n)
+$$
 
 ### Convolution
 
-The kernel is flipped horizontally and vertically before the operation:
+The kernel is flipped horizontally and vertically:
 
-\[ g(x,y)=`\sum`{=tex}\_m`\sum`{=tex}\_n f(x-m,y-n)h(m,n) \]
+$$
+g(x,y)=\sum_m\sum_n f(x-m,y-n)h(m,n)
+$$
 
 Therefore:
 
--   **Correlation:** kernel is not flipped.
--   **Convolution:** kernel is flipped by 180°.
+| Operation       | Kernel                    |
+| --------------- | ------------------------- |
+| **Correlation** | Kernel is not flipped     |
+| **Convolution** | Kernel is flipped by 180° |
 
-For symmetric kernels, such as many Gaussian or mean filters,
-convolution and correlation give the same result because flipping the
-kernel does not change it.
+For symmetric kernels, such as many Gaussian and mean kernels, convolution and correlation produce the same result because flipping the kernel does not change it.
 
-In many deep-learning libraries, the operation commonly called a
-convolution layer is mathematically implemented as cross-correlation
-rather than strict mathematical convolution.
+In many deep-learning libraries, the operation commonly called a **convolution layer** is mathematically implemented as cross-correlation rather than strict mathematical convolution.
 
-------------------------------------------------------------------------
+---
 
 ## Q10. Based on the results, explain the relationship between classical image processing and deep-learning-based feature extraction.
 
-Classical image processing and deep learning can be viewed as two
-different stages of feature transformation.
+Classical image processing and deep learning can be viewed as two different stages of feature transformation.
 
-Classical filters impose a predefined transformation before the CNN sees
-the image:
+Classical filters apply predefined transformations before the image reaches the CNN:
 
--   Mean/Gaussian/Median filters emphasize smoothing.
--   Sharpening emphasizes local high-frequency information.
--   Sobel emphasizes edges.
+* **Mean / Gaussian / Median:** smoothing
+* **Sharpening:** emphasizing local high-frequency information
+* **Sobel:** emphasizing image gradients and edges
 
-A CNN, in contrast, learns task-specific feature representations from
-the training data.
+A CNN, in contrast, learns task-specific feature representations from the training data.
 
-The results show that preprocessing is not automatically beneficial
-simply because it highlights a particular visual property. The
-pretrained networks were already capable of learning useful
-representations from the original RGB images. Removing or changing
-information before the CNN could therefore make classification harder.
+The results show that preprocessing is not automatically beneficial simply because it emphasizes a particular visual property. The pretrained CNNs were already capable of learning useful representations from the original RGB images. Removing or altering information before the CNN could therefore make classification more difficult.
 
-The strongest example is the Sobel condition. It converts the original
-RGB lesion image into a grayscale edge representation and substantially
-reduces performance across all three models.
+The strongest example is the Sobel condition. Converting the original RGB lesion image into an edge-oriented representation resulted in substantial performance reductions across all three models.
 
-At the same time, the response is model-dependent. ResNet101 maintained
-its baseline accuracy after sharpening, while VGG19 maintained its
-baseline accuracy after median filtering. This indicates that a
-classical filter can interact differently with the learned
-representation of different architectures.
+At the same time, the response was model-dependent. ResNet101 maintained its baseline accuracy after sharpening, while VGG19 maintained its baseline accuracy after Median filtering.
 
-Overall, the experiment suggests that classical image processing should
-be treated as an experimentally validated preprocessing choice rather
-than an automatic improvement over raw images.
+Therefore, classical image processing should be treated as an **experimentally validated preprocessing choice** rather than an automatic improvement over the original images.
 
-------------------------------------------------------------------------
+---
 
-# 9. Key Findings
+# 11. Key Findings
 
-1.  The three evaluated pretrained models were **ResNet50, VGG19, and
-    ResNet101**.
-2.  The unfiltered baseline produced the strongest overall accuracy for
-    ResNet50 and VGG19.
-3.  ResNet101 achieved the same accuracy with sharpening as with no
-    filtering.
-4.  **Sobel filtering produced the largest accuracy reduction for all
-    three models.**
-5.  Filtering effects were **not identical across architectures**.
-6.  Macro-F1 and balanced accuracy generally decreased when filtering
-    was applied.
-7.  Smoothing can remove useful texture, color transitions, and
-    morphological details.
-8.  Sharpening can preserve or emphasize useful boundaries but may also
-    amplify unwanted patterns.
-9.  Sobel filtering discards much of the original color and texture
-    information, which is particularly harmful when those features are
-    important for classification.
-10. The experiment demonstrates that classical image-processing filters
-    and learned CNN representations interact in a model-dependent way.
+The main findings from the 18 experiments are:
 
-------------------------------------------------------------------------
+1. **ResNet50, VGG19, and ResNet101** were the three pretrained models evaluated.
+2. ResNet50 achieved the highest unfiltered accuracy at **70.00%**.
+3. VGG19 achieved the highest AUC at **93.05%** under the unfiltered condition.
+4. ResNet50 achieved the highest weighted Precision at **75.79%** with Median filtering.
+5. The unfiltered ResNet50 condition achieved the highest F1-Score and Macro-F1 at **68.50%**.
+6. **Sobel filtering produced the largest accuracy reduction for all three models.**
+7. ResNet50 experienced the largest reduction with Sobel: **−25.00 pp**.
+8. VGG19 maintained its baseline accuracy after Median filtering.
+9. ResNet101 maintained its baseline accuracy after Sharpening.
+10. Macro-F1 and Balanced Accuracy generally decreased after filtering.
+11. Per-class results showed that the effect of filtering was not uniform across lesion classes.
+12. The results demonstrate that classical image preprocessing interacts with learned CNN representations in a **model-dependent manner**.
 
-# 10. Best Results Within Each Model
+---
 
-  ----------------------------------------------------------------------------
-  Model       Best             Accuracy     Macro-F1     Balanced          AUC
-              Accuracy                                   Accuracy 
-              Condition                                           
-  ----------- ------------ ------------ ------------ ------------ ------------
-  ResNet50    No Filter          70.00%       68.50%       70.00%       90.72%
+# 12. Best Results at a Glance
 
-  VGG19       No Filter /        66.25%     63.47% /       66.25%     93.05% /
-              Median                          62.13%                    90.90%
+| Metric                             | Model / Condition          |         Score |
+| ---------------------------------- | -------------------------- | ------------: |
+| Highest Accuracy                   | **ResNet50 — No Filter**   |    **70.00%** |
+| Highest Weighted Precision         | **ResNet50 — Median**      |    **75.79%** |
+| Highest Recall                     | **ResNet50 — No Filter**   |    **70.00%** |
+| Highest F1-Score                   | **ResNet50 — No Filter**   |    **68.50%** |
+| Highest Macro-F1                   | **ResNet50 — No Filter**   |    **68.50%** |
+| Highest Balanced Accuracy          | **ResNet50 — No Filter**   |    **70.00%** |
+| Highest AUC                        | **VGG19 — No Filter**      |    **93.05%** |
+| Largest Accuracy Drop              | **ResNet50 — Sobel**       | **−25.00 pp** |
+| Lowest Accuracy                    | **ResNet101 — Sobel**      |    **42.50%** |
+| Accuracy Preserved After Filtering | **VGG19 — Median**         |    **66.25%** |
+| Accuracy Preserved After Filtering | **ResNet101 — Sharpening** |    **63.75%** |
 
-  ResNet101   No Filter /        63.75%     60.54% /       63.75%     90.04% /
-              Sharpening                      60.57%                    91.07%
-  ----------------------------------------------------------------------------
+---
 
-The table above reports the conditions with the highest accuracy within
-each model. Where multiple conditions have equal accuracy, they are
-shown together rather than treating the tie as a unique winner.
+# 13. Best Results Within Each Model
 
-------------------------------------------------------------------------
+| Model         | Best Accuracy Condition(s) |   Accuracy |            Macro-F1 | Balanced Accuracy |                 AUC |
+| ------------- | -------------------------- | ---------: | ------------------: | ----------------: | ------------------: |
+| **ResNet50**  | No Filter                  | **70.00%** |          **68.50%** |        **70.00%** |              90.72% |
+| **VGG19**     | No Filter / Median         | **66.25%** |     63.47% / 62.13% |        **66.25%** |     93.05% / 90.90% |
+| **ResNet101** | No Filter / Sharpening     | **63.75%** | 60.54% / **60.57%** |        **63.75%** | 90.04% / **91.07%** |
 
-# 11. Required Additional Analysis Checklist
+Where multiple conditions achieved the same accuracy, they are reported together rather than treating the tie as a unique result.
 
-The executed notebook contains code/output for the following required
-analyses:
+---
 
--   [x] HAM/ISIC selected class distribution
--   [x] Original and filtered image visual comparison
--   [x] Confusion matrices
--   [x] Training/validation accuracy curves
--   [x] Training/validation loss curves
--   [x] Per-class precision, recall, and F1-score
--   [x] Macro-F1
--   [x] Balanced accuracy
--   [x] AUC/ROC metric
--   [x] Comparative accuracy analysis
--   [x] Change from each model's unfiltered baseline
+# 14. Required Analysis Checklist
 
-The notebook also saves:
+The executed notebook contains the following analyses required for the experiment:
 
--   `results/lab02_filter_comparison.csv`
--   `results/lab02_per_class_metrics.csv`
+* [x] Selected-class distribution
+* [x] Original and filtered image visual comparison
+* [x] Confusion matrices
+* [x] Training/validation accuracy curves
+* [x] Training/validation loss curves
+* [x] Per-class Precision, Recall, and F1-Score
+* [x] Macro-F1
+* [x] Balanced Accuracy
+* [x] AUC/ROC metric
+* [x] Comparative accuracy analysis
+* [x] Change from each model's unfiltered baseline
+* [x] Analysis of the effect of each filter
+* [x] Answers to all required questions
 
-These CSV files contain the numerical experimental results generated by
-the notebook.
+The notebook also saves the numerical results as:
 
-------------------------------------------------------------------------
+```text
+results/lab02_filter_comparison.csv
+results/lab02_per_class_metrics.csv
+```
 
-# 12. Conclusion
+These CSV files contain the experimental results generated during execution.
 
-The experiment evaluated three pretrained CNN architectures under an
-unfiltered baseline and five spatial-domain filtering conditions.
+---
 
-The results show that the original images generally provided stronger
-classification performance than filtered images. The **Sobel edge filter
-caused the largest performance reduction across all three models**, with
-accuracy decreases of 25.00 percentage points for ResNet50, 13.75
-percentage points for VGG19, and 21.25 percentage points for ResNet101.
+# 15. Conclusion
 
-The results also demonstrate that filtering does not affect all
-architectures identically. Median filtering preserved VGG19's baseline
-accuracy, while sharpening preserved ResNet101's baseline accuracy.
-Therefore, the effect of classical preprocessing depends on the
-interaction between the filter, the information retained in the image,
-and the learned representation of the CNN.
+This experiment evaluated three pretrained CNN architectures—**ResNet50, VGG19, and ResNet101**—under an unfiltered baseline and five spatial-domain image-filtering conditions.
 
-For this experimental setup, the evidence indicates that preserving the
-original RGB lesion information was generally more useful than applying
-the tested spatial filters before classification.
+The results show that the original RGB images generally provided stronger classification performance than the filtered images. ResNet50 achieved the highest baseline accuracy of **70.00%**, while VGG19 and ResNet101 achieved **66.25%** and **63.75%**, respectively.
 
-------------------------------------------------------------------------
+Among the tested filters, **Sobel produced the largest performance reduction across all three models**. Accuracy decreased by:
 
-## 13. Reproducibility Notes
+* **25.00 percentage points** for ResNet50
+* **13.75 percentage points** for VGG19
+* **21.25 percentage points** for ResNet101
 
--   Random seed: `42`
--   Image size: `224 × 224`
--   Batch size: `32`
--   Number of classes: `5`
--   Models: `ResNet50`, `VGG19`, `ResNet101`
--   Conditions: `No Filter`, `Average`, `Gaussian`, `Median`,
-    `Sharpening`, `Sobel`
--   Total runs: `18`
--   Validation split: stratified 10%
--   Evaluation: held-out `Test` directory
--   Pretrained weights: torchvision ImageNet pretrained weights
--   Frameworks/libraries: PyTorch, torchvision, OpenCV, scikit-learn
+The results also demonstrate that filtering does not affect all architectures identically. **VGG19 maintained its baseline accuracy after Median filtering**, while **ResNet101 maintained its baseline accuracy after Sharpening**.
 
-## 14. Submission Note
+These observations indicate that the usefulness of a classical image-processing filter depends on the information it preserves or removes and how that information interacts with the learned feature representation of the CNN.
 
-Before submitting, keep the notebook and this `results.md` file together
-in the Lab 02 GitHub folder. The lab instructions also require a brief
-README explaining how to run the experiments.
+For this dataset and experimental configuration, preserving the **original RGB lesion information** was generally more effective than applying the tested spatial-domain filters before classification.
 
-The dataset discrepancy should be reported transparently: the executed
-notebook uses the same 5-class ISIC subset from Lab 1, not a separate
-original HAM10000 download.
+---
+
+# 16. Reproducibility Notes
+
+| Setting                | Value                                                             |
+| ---------------------- | ----------------------------------------------------------------- |
+| Dataset                | 5-class ISIC skin-lesion subset                                   |
+| Number of classes      | 5                                                                 |
+| Image size             | 224 × 224                                                         |
+| Batch size             | 32                                                                |
+| Random seed            | 42                                                                |
+| Train/Validation split | Stratified 90/10                                                  |
+| Test evaluation        | Official `Test` directory                                         |
+| Models                 | ResNet50, VGG19, ResNet101                                        |
+| Image conditions       | No Filter, Average, Gaussian, Median, Sharpening, Sobel           |
+| Total experiments      | 18                                                                |
+| Optimizer              | Adam                                                              |
+| Loss function          | CrossEntropyLoss                                                  |
+| Pretrained weights     | ImageNet                                                          |
+| Hardware               | CUDA/GPU                                                          |
+| Frameworks/Libraries   | PyTorch, torchvision, OpenCV, scikit-learn                        |
+| Main metrics           | Accuracy, Precision, Recall, F1, Macro-F1, Balanced Accuracy, AUC |
+
+---
+
+
