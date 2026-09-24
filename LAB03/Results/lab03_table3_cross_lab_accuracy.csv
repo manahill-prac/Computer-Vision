@@ -1,0 +1,5 @@
+Model / Classifier,Accuracy Raw (Lab 1),Accuracy Filtered (Lab 2),Accuracy Edge (Lab 3)
+KNN,0.5625,0.4875,0.3
+Linear SVM,0.5875,0.525,0.3625
+Random Forest,0.6,0.6,0.3875
+ResNet50 CNN,0.7,0.6,0.375
