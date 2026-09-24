@@ -544,6 +544,3 @@ After completing this laboratory, the following were demonstrated:
 
 ---
 
-## Note on Reported Values
-
-All numerical values in this document are taken from the supplied execution output. No numerical confusion-matrix values are reported because they were not included in the supplied results. Qualitative observations in Table 1 are presented as observations of the behavior being evaluated, not as fabricated numerical measurements.
