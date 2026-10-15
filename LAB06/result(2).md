@@ -2,7 +2,7 @@
 
 A landmark recognition system built with **Python + OpenCV**. It matches SIFT features between a query photo and a database of reference images, identifies the landmark, rejects images it does not know, and localizes the landmark with a RANSAC homography.
 
-The full code is in [`Landmark_Recognition_SIFT.ipynb`](../Landmark_Recognition_SIFT.ipynb). This page summarizes what the notebook produced when it was run on Google Colab.
+The full code is in [`Landmark_Recognition_SIFT.ipynb`](Landmark_Recognition_SIFT.ipynb). This page summarizes what the notebook produced when it was run on Google Colab.
 
 ---
 
@@ -45,10 +45,6 @@ Average SIFT keypoints per reference image:
 | Statue of Liberty | 8 | 412 |
 | Taj Mahal | 8 | 992 |
 
-![Database preview](images/task1_database_preview.jpg)
-
-![Reference images with SIFT keypoints](images/task2_reference_keypoints.jpg)
-
 ---
 
 ## 2. Six test conditions (Task 6)
@@ -65,26 +61,6 @@ All six tests use the Eiffel Tower. Tests 1 to 4 start from one held-out photo, 
 | 6 | Not in database | (not in database) | Pyramids of Giza (rejected) | 982 | 19 | 5 | Rejected | 1.08 | yes |
 
 Overall, 4 of the 6 tests produced the correct outcome.
-
-### Screenshots
-
-**Test 1: Original (recognized, region localized)**
-![Test 1](images/task6_test1.jpg)
-
-**Test 2: Rotated 45° (recognized)**
-![Test 2](images/task6_test2.jpg)
-
-**Test 3: Resized to 50% (rejected, too few keypoints)**
-![Test 3](images/task6_test3.jpg)
-
-**Test 4: Reduced brightness (recognized)**
-![Test 4](images/task6_test4.jpg)
-
-**Test 5: Different viewpoint (rejected)**
-![Test 5](images/task6_test5.jpg)
-
-**Test 6: Landmark not in the database (correctly rejected)**
-![Test 6](images/task6_test6.jpg)
 
 ---
 
@@ -164,19 +140,13 @@ Re-applying the decision rule with different `MIN_INLIERS` values:
 | 25 | 11.1 | 100 |
 | 30 | 11.1 | 100 |
 
-![Threshold sweep](images/task6_threshold_sweep.jpg)
-
 Lowering `MIN_INLIERS` only raised recognition from 22.2% to 27.8%, while every unknown image was still rejected. The other thresholds (`MIN_GOOD`, the inlier ratio and the polygon-validity check) also contribute to the rejections, because most missed queries have very few reliable matches in the first place.
 
 ---
 
-## 4. Demo screenshots (Task 3 and Task 5)
+## 4. Demo run (Task 3 and Task 5)
 
-The query-processing and localization demo cells (Tasks 3 and 5) picked their image from the `_unknown` query folder, so these two screenshots show a **Chichen Itza** image, which is not in the database. This is why the title reads "True landmark: Unknown". It is also a useful example of correct rejection: the top candidate (Pyramids of Giza) had 19 reliable matches but only 5 RANSAC inliers, so no region is drawn.
-
-![Query keypoints](images/task3_query_keypoints.jpg)
-
-![Rejected unknown landmark](images/task5_demo_result.jpg)
+The query-processing and localization demo cells (Tasks 3 and 5) picked their image from the `_unknown` query folder, so these two demos used a **Chichen Itza** image, which is not in the database. It is also a useful example of correct rejection: the top candidate (Pyramids of Giza) had 19 reliable matches but only 5 RANSAC inliers, so no region is drawn.
 
 ---
 
@@ -215,6 +185,6 @@ The query-processing and localization demo cells (Tasks 3 and 5) picked their im
 
 1. Open `Landmark_Recognition_SIFT.ipynb` in Google Colab.
 2. Run all cells (**Runtime → Run all**). The dataset is downloaded automatically with `kagglehub`.
-3. The notebook writes the organized database, query images, stored descriptors, result tables and screenshots, and packages them as `landmark_submission.zip`.
+3. The notebook writes the organized database, query images, stored descriptors and result tables, and packages them as `landmark_submission.zip`.
 
 Settings: `SEED = 42`, OpenCV 4.14.0. Because the reference and query images are chosen at random from the dataset, a different seed or dataset version can give different numbers.
